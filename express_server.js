@@ -30,6 +30,12 @@ app.get('/urls/new', (req, res) => {
   res.render('urls_new');
 });
 
+// Delete an entry and redirected to "myURL" page
+app.post('/urls/:shortURL/delete', (req, res) => {
+  delete urlDatabase[req.params.shortURL];
+  res.redirect('/urls');
+});
+
 app.post('/urls', (req, res) => {
   // console.log(req.body); // Log the POST request body to the console
   const randomizedURL = generateRandomString();
