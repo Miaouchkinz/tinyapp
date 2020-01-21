@@ -28,6 +28,13 @@ app.post('/urls/login', (req, res) => {
     .redirect('/urls');
 });
 
+// Logout : clear username cookie and redirect to /urls page
+app.post('/urls/logout', (req, res) => {
+  res
+    .clearCookie('username')
+    .redirect('/urls');
+});
+
 // Delete an entry and redirected to "myURL" page
 app.post('/urls/:shortURL/delete', (req, res) => {
   delete urlDatabase[req.params.shortURL];
