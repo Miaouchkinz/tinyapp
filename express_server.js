@@ -4,7 +4,6 @@ const PORT = 8080; // default port 8080
 const bodyParser = require('body-parser');
 
 app.use(bodyParser.urlencoded({extended: true}));
-
 // set the view engine to ejs
 app.set('view engine', 'ejs');
 
@@ -17,18 +16,8 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-app.get('/', (req, res) => {
-  res.send('Hello!');
-});
-
-app.get('/urls', (req, res) => {
-  let templateVars = {urls: urlDatabase};
-  res.render('urls_index', templateVars);
-});
-
-app.get('/urls/new', (req, res) => {
-  res.render('urls_new');
-});
+// REQUEST routes for URLS
+// ============================
 
 // Delete an entry and redirected to "myURL" page
 app.post('/urls/:shortURL/delete', (req, res) => {
@@ -36,13 +25,25 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   res.redirect('/urls');
 });
 
-app.post('/urls', (req, res) => {
-  // console.log(req.body); // Log the POST request body to the console
-  const randomizedURL = generateRandomString();
-  urlDatabase[randomizedURL] = req.body.longURL;
-  res.redirect(`/urls/${randomizedURL}`); // Respond with 'Ok' (to be replaced)
+// Create a new entry
+app.get('/urls/new', (req, res) => {
+  res.render('urls_new');
 });
 
+// Index page showing all your added URL entries
+app.get('/urls', (req, res) => {
+  let templateVars = {urls: urlDatabase};
+  res.render('urls_index', templateVars);
+});
+
+// Redirect to url/shortURL through newly generated ID
+app.post('/urls', (req, res) => {
+  const randomizedURL = generateRandomString();
+  urlDatabase[randomizedURL] = req.body.longURL;
+  res.redirect(`/urls/${randomizedURL}`);
+});
+
+// Page for new entry
 app.get('/urls/:shortURL', (req, res) => {
   let templateVars = {
     shortURL: req.params.shortURL,
@@ -57,9 +58,15 @@ app.post('/urls/:shortURL/edit', (req, res) => {
   res.redirect('/urls');
 });
 
+// Redirect to longURLL by clicking on the given shortURL
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
   res.redirect(`http://${longURL}`);
+});
+
+// Basic set up to ensure routing is working
+app.get('/', (req, res) => {
+  res.send('Hello!');
 });
 
 app.get('/urls.json', (req, res) => {
@@ -69,6 +76,10 @@ app.get('/urls.json', (req, res) => {
 app.get('/hello', (req, res) => {
   res.send('<html><body>Hello <b>World</b></body></html>\n');
 });
+
+
+// SERVER LISTEN 
+// =====================
 
 app.listen(PORT, () => {
   console.log(`Example app listening on ${PORT}!`)
