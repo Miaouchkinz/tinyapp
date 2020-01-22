@@ -1,25 +1,47 @@
+// SET UP && CONFIGS
+// =======================
+
 const express = require('express');
 const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 
-// set the view engine to ejs
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
-function generateRandomString() {
-  return Math.floor((1 + Math.random()) * 0x1000).toString(16).substring(1);
-}
+// GLOBAL VARIABLES
+// ================
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
 
-// REQUEST routes for URLS
-// ============================
+const users = {
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+};
+
+// GLOBAL FUNCTIONS
+// ======================
+
+const generateRandomString = () => {
+  return Math.floor((1 + Math.random()) * 0x1000).toString(16).substring(1);
+}
+
+
+// USER AUTH Routes
+// =======================
 
 // Login : Set a username cookie and redirect to /urls page
 app.post('/urls/login', (req, res) => {
@@ -34,6 +56,57 @@ app.post('/urls/logout', (req, res) => {
     .clearCookie('username')
     .redirect('/urls');
 });
+
+// Render Register Page
+app.get('/register', (req, res) => {
+  let templateVars = {
+    username: req.cookies["username"],
+  };
+  res.render('registration', templateVars);
+});
+
+app.post('/register', (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  const userId = generateRandomString();
+
+  let foundUser;
+  let newUser;
+
+  for (let existingUserID in users) {
+    if (users[existingUserID].email === email) {
+      foundUser = users[existingUserID];
+    }
+  }
+
+  // if email/password are empty strings --
+  // send back a response with the 400 error code
+  if (email === "" || password === "") {
+    res.statusCode = 400;
+    res.end("Oops! Please enter an email and password to register!")
+  // if email already exist
+  // send response with error message
+  } else if (foundUser) {
+      res.statusCode = 400;
+      res.end("That email is already taken, try again!")
+  } else {
+    let newUser = {
+      id: userId,
+      email: email,
+      password: password
+    };
+  // add to global object
+  users[userId] = newUser;
+  // Once added, set user_id cookie containing the new random ID
+  res.cookie('username', userId);
+  //redirect to urls page
+  res.redirect('/urls');
+  }
+
+});
+
+// REQUEST routes for URLS
+// ============================
 
 // Delete an entry and redirected to "myURL" page
 app.post('/urls/:shortURL/delete', (req, res) => {
