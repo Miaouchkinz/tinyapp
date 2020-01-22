@@ -46,25 +46,26 @@ const generateRandomString = () => {
 // Login : Set a username cookie and redirect to /urls page
 app.post('/urls/login', (req, res) => {
   res
-    .cookie('username', req.body.username)
+    .cookie('user_id', req.body.username)
     .redirect('/urls');
 });
 
 // Logout : clear username cookie and redirect to /urls page
 app.post('/urls/logout', (req, res) => {
   res
-    .clearCookie('username')
+    .clearCookie('user_id')
     .redirect('/urls');
 });
 
 // Render Register Page
 app.get('/register', (req, res) => {
   let templateVars = {
-    username: req.cookies["username"],
+    user: users[req.cookies["user_id"]],
   };
   res.render('registration', templateVars);
 });
 
+// What happens after a user fills the registration page
 app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -98,7 +99,7 @@ app.post('/register', (req, res) => {
   // add to global object
   users[userId] = newUser;
   // Once added, set user_id cookie containing the new random ID
-  res.cookie('username', userId);
+  res.cookie('user_id', userId);
   //redirect to urls page
   res.redirect('/urls');
   }
@@ -117,7 +118,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 // Create a new entry
 app.get('/urls/new', (req, res) => {
   let templateVars = {
-    username: req.cookies["username"],
+    user: users[req.cookies["user_id"]],
   };
   res.render('urls_new', templateVars);
 });
@@ -126,7 +127,8 @@ app.get('/urls/new', (req, res) => {
 app.get('/urls', (req, res) => {
   let templateVars = {
     urls: urlDatabase,
-    username: req.cookies["username"]
+    user: users[req.cookies["user_id"]]
+    //username: req.cookies["username"]
   };
   res.render('urls_index', templateVars);
 });
@@ -143,7 +145,7 @@ app.get('/urls/:shortURL', (req, res) => {
   let templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
-    username: req.cookies["username"]
+    user: users[req.cookies["user_id"]]
   }
   res.render('urls_show', templateVars);
 });
@@ -154,7 +156,7 @@ app.post('/urls/:shortURL/edit', (req, res) => {
   res.redirect('/urls');
 });
 
-// Redirect to longURLL by clicking on the given shortURL
+// Redirect to longURL by clicking on the given shortURL
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
   res.redirect(`http://${longURL}`);
