@@ -15,8 +15,14 @@ app.use(cookieParser());
 // ================
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+    longURL: "http://www.lighthouselabs.ca",
+    userID: "userRandomID"
+  },
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    userID: "user2RandomID"
+  }
 };
 
 const users = {
@@ -167,7 +173,7 @@ app.get('/urls', (req, res) => {
 // Redirect to url/shortURL through newly generated ID
 app.post('/urls', (req, res) => {
   const randomizedURL = generateRandomString();
-  urlDatabase[randomizedURL] = req.body.longURL;
+  urlDatabase[randomizedURL].longURL = req.body.longURL;
   res.redirect(`/urls/${randomizedURL}`);
 });
 
@@ -175,7 +181,7 @@ app.post('/urls', (req, res) => {
 app.get('/urls/:shortURL', (req, res) => {
   let templateVars = {
     shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL],
+    longURL: urlDatabase[req.params.shortURL].longURL,
     user: users[req.cookies["user_id"]]
   }
   res.render('urls_show', templateVars);
@@ -183,13 +189,13 @@ app.get('/urls/:shortURL', (req, res) => {
 
 // Edit an entry and redirected to "myURL" page
 app.post('/urls/:shortURL/edit', (req, res) => {
-  urlDatabase[req.params.shortURL] = req.body.longURL;
+  urlDatabase[req.params.shortURL].longURL = req.body.longURL;
   res.redirect('/urls');
 });
 
 // Redirect to longURL by clicking on the given shortURL
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(`http://${longURL}`);
 });
 
