@@ -16,7 +16,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
 const isUserloggedIn = (req, res, next) => {
-  if (!req.cookies["user_id"] && (req.path !== '/login' || req.path !== '/register')){
+  if (!req.cookies["user_id"] && req.path !== '/register' && req.path !== '/login'){
     let templateVars = {
       user: null,
       error: 'Please login or register to Tiny App to access this page!'
@@ -60,7 +60,7 @@ const users = {
 // ======================
 
 const generateRandomString = () => {
-  return uuidv4().splice(6);
+  return uuidv4().slice(6);
 }
 
 // returns the URLs where the userID is equal to the id of the currently logged in
@@ -158,7 +158,7 @@ app.post('/register', (req, res) => {
       error: "Oops! Please enter an email and password to register!"
     };
     res.statusCode = 400;
-    res.render('register', templateVars)
+    res.render('registration', templateVars)
   // if email already exist
   // send response with error message
   } else if (foundUser) {
@@ -167,7 +167,7 @@ app.post('/register', (req, res) => {
       error: "That email is already taken, try again!"
     };
       res.statusCode = 400;
-      res.render('register', templateVars)
+      res.render('registration', templateVars)
   } else {
     let newUser = {
       id: userId,
