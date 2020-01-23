@@ -148,7 +148,11 @@ app.get('/urls/new', (req, res) => {
   let templateVars = {
     user: users[req.cookies["user_id"]],
   };
-  res.render('urls_new', templateVars);
+  if (!req.cookies["user_id"]){
+    res.redirect('/login');
+  } else {
+    res.render('urls_new', templateVars);
+  }
 });
 
 // Index page showing all your added URL entries
