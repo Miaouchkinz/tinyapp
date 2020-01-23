@@ -6,10 +6,28 @@ const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const uuidv4 = require('uuid/v4');
+
+// MIDDLEWARE
+//===================
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
+
+const isUserloggedIn = (req, res, next) => {
+  if (!req.cookies["user_id"] && (req.path !== '/login' || req.path !== '/register')){
+    let templateVars = {
+      user: null,
+      error: 'Please login or register to Tiny App to access this page!'
+    };
+    res.render('login', templateVars)
+  } else {
+    next();
+  }
+}
+
+app.use(isUserloggedIn);
 
 // GLOBAL VARIABLES
 // ================
@@ -42,8 +60,34 @@ const users = {
 // ======================
 
 const generateRandomString = () => {
-  return Math.floor((1 + Math.random()) * 0x1000000).toString(16).substring(1);
+  return uuidv4().splice(6);
 }
+
+// returns the URLs where the userID is equal to the id of the currently logged in
+// user.
+const urlsForUser = (db, id) => {
+  let urlsForUserID = {};
+  for (let shortURL in db) {
+    if (id === db[shortURL].userID) {
+      urlsForUserID[shortURL] = db[shortURL].longURL;
+    }
+  }
+  return urlsForUserID;
+}
+
+// Checks to see if a user with that email already exists
+const existingUser = (email) => {
+  let foundUser;
+  for (let existingUserID in users) {
+    if (users[existingUserID].email === email) {
+      foundUser = users[existingUserID];
+    }
+  }
+  return foundUser;
+}
+
+
+
 
 
 // USER AUTH Routes
@@ -60,14 +104,7 @@ app.get('/login', (req, res) => {
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-
-  let foundUser;
-
-  for (let existingUserID in users) {
-    if (users[existingUserID].email === email) {
-      foundUser = users[existingUserID];
-    }
-  }
+  const foundUser = existingUser(email);
 
   //If a user with that e-mail cannot be found, return a response with a 403 status code.
 
@@ -89,7 +126,7 @@ app.post('/login', (req, res) => {
 app.post('/logout', (req, res) => {
   res
     .clearCookie('user_id')
-    .redirect('/urls');
+    .redirect('/login');
 });
 
 // Render Register Page
@@ -105,14 +142,7 @@ app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
   const userId = generateRandomString();
-
-  let foundUser;
-
-  for (let existingUserID in users) {
-    if (users[existingUserID].email === email) {
-      foundUser = users[existingUserID];
-    }
-  }
+  const foundUser = existingUser(email);
 
   // if email/password are empty strings --
   // send back a response with the 400 error code
@@ -140,6 +170,9 @@ app.post('/register', (req, res) => {
 
 });
 
+
+
+
 // REQUEST routes for URLS
 // ============================
 
@@ -154,17 +187,17 @@ app.get('/urls/new', (req, res) => {
   let templateVars = {
     user: users[req.cookies["user_id"]],
   };
-  if (!req.cookies["user_id"]){
-    res.redirect('/login');
-  } else {
+  // if (!req.cookies["user_id"]){
+  //   res.redirect('/login');
+  // } else {
     res.render('urls_new', templateVars);
-  }
+  // }
 });
 
 // Index page showing all your added URL entries
 app.get('/urls', (req, res) => {
   let templateVars = {
-    urls: urlDatabase,
+    urls: urlsForUser(urlDatabase, (req.cookies["user_id"])),
     user: users[req.cookies["user_id"]]
   };
   res.render('urls_index', templateVars);
@@ -211,6 +244,8 @@ app.get('/urls.json', (req, res) => {
 app.get('/hello', (req, res) => {
   res.send('<html><body>Hello <b>World</b></body></html>\n');
 });
+
+
 
 
 // SERVER LISTEN 
