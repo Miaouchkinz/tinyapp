@@ -96,6 +96,7 @@ const existingUser = (email) => {
 app.get('/login', (req, res) => {
   let templateVars = {
     user: users[req.cookies["user_id"]],
+    error: false
   };
   res.render('login', templateVars);
 });
@@ -111,8 +112,12 @@ app.post('/login', (req, res) => {
   //If a user with that e-mail address is located, compare the password given in the form with
   //the existing user's password. If it does not match, return a response with a 403 status code.
   if (!foundUser || (foundUser && password !== foundUser.password)) {
+    let templateVars = {
+      user: null,
+      error: "Your email or password was incorrect, please try again!"
+    };
     res.statusCode = 403;
-    res.end("Your email or password was incorrect, please try again!")
+    res.render('login', templateVars)
   } else {
   // If both checks pass, set the user_id cookie with the matching user's random ID, then redirect
   // to /urls.
@@ -133,6 +138,7 @@ app.post('/logout', (req, res) => {
 app.get('/register', (req, res) => {
   let templateVars = {
     user: users[req.cookies["user_id"]],
+    error: false
   };
   res.render('registration', templateVars);
 });
@@ -147,13 +153,21 @@ app.post('/register', (req, res) => {
   // if email/password are empty strings --
   // send back a response with the 400 error code
   if (email === "" || password === "") {
+    let templateVars = {
+      user: null,
+      error: "Oops! Please enter an email and password to register!"
+    };
     res.statusCode = 400;
-    res.end("Oops! Please enter an email and password to register!")
+    res.render('register', templateVars)
   // if email already exist
   // send response with error message
   } else if (foundUser) {
+    let templateVars = {
+      user: null,
+      error: "That email is already taken, try again!"
+    };
       res.statusCode = 400;
-      res.end("That email is already taken, try again!")
+      res.render('register', templateVars)
   } else {
     let newUser = {
       id: userId,
@@ -187,11 +201,7 @@ app.get('/urls/new', (req, res) => {
   let templateVars = {
     user: users[req.cookies["user_id"]],
   };
-  // if (!req.cookies["user_id"]){
-  //   res.redirect('/login');
-  // } else {
     res.render('urls_new', templateVars);
-  // }
 });
 
 // Index page showing all your added URL entries
