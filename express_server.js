@@ -36,22 +36,51 @@ const users = {
 // ======================
 
 const generateRandomString = () => {
-  return Math.floor((1 + Math.random()) * 0x1000).toString(16).substring(1);
+  return Math.floor((1 + Math.random()) * 0x1000000).toString(16).substring(1);
 }
 
 
 // USER AUTH Routes
 // =======================
 
+app.get('/login', (req, res) => {
+  let templateVars = {
+    user: users[req.cookies["user_id"]],
+  };
+  res.render('login', templateVars);
+});
+
 // Login : Set a username cookie and redirect to /urls page
-app.post('/urls/login', (req, res) => {
+app.post('/login', (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+
+  let foundUser;
+
+  for (let existingUserID in users) {
+    if (users[existingUserID].email === email) {
+      foundUser = users[existingUserID];
+    }
+  }
+
+  //If a user with that e-mail cannot be found, return a response with a 403 status code.
+
+  //If a user with that e-mail address is located, compare the password given in the form with
+  //the existing user's password. If it does not match, return a response with a 403 status code.
+  if (!foundUser || (foundUser && password !== foundUser.password)) {
+    res.statusCode = 403;
+    res.end("Your email or password was incorrect, please try again!")
+  } else {
+  // If both checks pass, set the user_id cookie with the matching user's random ID, then redirect
+  // to /urls.
   res
-    .cookie('user_id', req.body.username)
+    .cookie('user_id', foundUser.id)
     .redirect('/urls');
+  }
 });
 
 // Logout : clear username cookie and redirect to /urls page
-app.post('/urls/logout', (req, res) => {
+app.post('/logout', (req, res) => {
   res
     .clearCookie('user_id')
     .redirect('/urls');
@@ -72,7 +101,6 @@ app.post('/register', (req, res) => {
   const userId = generateRandomString();
 
   let foundUser;
-  let newUser;
 
   for (let existingUserID in users) {
     if (users[existingUserID].email === email) {
