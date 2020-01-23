@@ -50,7 +50,7 @@ app.get('/login', (req, res) => {
   res.render('login', templateVars);
 });
 
-// Login : Set a username cookie and redirect to /urls page
+// Login : Set a cookie using userID and redirect to /urls page
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -79,7 +79,7 @@ app.post('/login', (req, res) => {
   }
 });
 
-// Logout : clear username cookie and redirect to /urls page
+// Logout : clear userID cookie and redirect to /urls page
 app.post('/logout', (req, res) => {
   res
     .clearCookie('user_id')
@@ -156,7 +156,6 @@ app.get('/urls', (req, res) => {
   let templateVars = {
     urls: urlDatabase,
     user: users[req.cookies["user_id"]]
-    //username: req.cookies["username"]
   };
   res.render('urls_index', templateVars);
 });
