@@ -223,11 +223,20 @@ app.post('/urls', (req, res) => {
 // Page for new entry
 app.get('/urls/:shortURL', (req, res) => {
   let templateVars = {
+    urls: urlsForUser(urlDatabase, (req.cookies["user_id"])),
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
     user: users[req.cookies["user_id"]]
   }
-  res.render('urls_show', templateVars);
+  if (!templateVars.urls[templateVars.shortURL]) {
+    let templateVars = {
+      user: null,
+      error: 'Please login or register to Tiny App to access this page!'
+    };
+    res.render('login', templateVars)
+  } else {
+    res.render('urls_show', templateVars);
+  }
 });
 
 // Edit an entry and redirected to "myURL" page
