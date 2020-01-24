@@ -60,7 +60,7 @@ const users = {
 // ======================
 
 const generateRandomString = () => {
-  return uuidv4().slice(6);
+  return uuidv4().slice(0,6);
 }
 
 // returns the URLs where the userID is equal to the id of the currently logged in
@@ -213,10 +213,13 @@ app.get('/urls', (req, res) => {
   res.render('urls_index', templateVars);
 });
 
-// Redirect to url/shortURL through newly generated ID
+// Create new shortURL and redirect to its edit page
 app.post('/urls', (req, res) => {
   const randomizedURL = generateRandomString();
-  urlDatabase[randomizedURL] = {longURL: req.body.longURL};
+  urlDatabase[randomizedURL] = { 
+    longURL: req.body.longURL,
+    userID: req.cookies["user_id"]
+  };
   res.redirect(`/urls/${randomizedURL}`);
 });
 
