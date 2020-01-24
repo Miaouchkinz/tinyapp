@@ -83,11 +83,11 @@ const urlsForUser = (db, id) => {
 }
 
 // Checks to see if a user with that email already exists
-const existingUser = (email) => {
+const existingUser = (email, db) => {
   let foundUser;
-  for (let existingUserID in users) {
-    if (users[existingUserID].email === email) {
-      foundUser = users[existingUserID];
+  for (let existingUserID in db) {
+    if (db[existingUserID].email === email) {
+      foundUser = db[existingUserID];
     }
   }
   return foundUser;
@@ -110,7 +110,7 @@ app.get('/login', (req, res) => {
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const foundUser = existingUser(email);
+  const foundUser = existingUser(email, users);
 
   //If a user with that e-mail cannot be found, return a response with a 403 status code.
 
@@ -152,7 +152,7 @@ app.post('/register', (req, res) => {
   const password = req.body.password;
   const hashedPassword = bcrypt.hashSync(password, 10);
   const userId = generateRandomString();
-  const foundUser = existingUser(email);
+  const foundUser = existingUser(email, users);
 
   // if email/password are empty strings --
   // send back a response with the 400 error code
