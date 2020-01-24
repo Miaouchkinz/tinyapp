@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session')
 const uuidv4 = require('uuid/v4');
 const bcrypt = require('bcrypt');
+const { urlsForUser, existingUser } = require('./helper')
 
 // MIDDLEWARE
 //===================
@@ -30,9 +31,16 @@ const isUserloggedIn = (req, res, next) => {
   } else {
     next();
   }
-}
+};
 
 app.use(isUserloggedIn);
+
+// GLOBAL FUNCTIONS
+// ======================
+
+const generateRandomString = () => {
+  return uuidv4().slice(0,6);
+}
 
 // GLOBAL VARIABLES
 // ================
@@ -62,37 +70,6 @@ const users = {
     hashedPassword: bcrypt.hashSync("dishwasher-funk", 10)
   }
 };
-
-// GLOBAL FUNCTIONS
-// ======================
-
-const generateRandomString = () => {
-  return uuidv4().slice(0,6);
-}
-
-// returns the URLs where the userID is equal to the id of the currently logged in
-// user.
-const urlsForUser = (db, id) => {
-  let urlsForUserID = {};
-  for (let shortURL in db) {
-    if (id === db[shortURL].userID) {
-      urlsForUserID[shortURL] = db[shortURL].longURL;
-    }
-  }
-  return urlsForUserID;
-}
-
-// Checks to see if a user with that email already exists
-const existingUser = (email, db) => {
-  let foundUser;
-  for (let existingUserID in db) {
-    if (db[existingUserID].email === email) {
-      foundUser = db[existingUserID];
-    }
-  }
-  return foundUser;
-}
-
 
 
 // USER AUTH Routes
@@ -259,6 +236,10 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(`${longURL}`);
 });
 
+
+
+
+// ========================================
 // Basic set up to ensure routing is working
 app.get('/', (req, res) => {
   res.send('Hello!');
