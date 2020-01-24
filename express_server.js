@@ -16,7 +16,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
 const isUserloggedIn = (req, res, next) => {
-  if (!req.cookies["user_id"] && req.path !== '/register' && req.path !== '/login'){
+  if (!req.cookies["user_id"] && req.path !== '/register' && req.path !== '/login' && req.path !== '/u/:shortURL'){
     let templateVars = {
       user: null,
       error: 'Please login or register to Tiny App to access this page!'
@@ -248,7 +248,7 @@ app.post('/urls/:shortURL/edit', (req, res) => {
 // Redirect to longURL by clicking on the given shortURL
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL].longURL;
-  res.redirect(`http://${longURL}`);
+  res.redirect(`${longURL}`);
 });
 
 // Basic set up to ensure routing is working
