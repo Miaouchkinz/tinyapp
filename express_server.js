@@ -16,7 +16,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
 const isUserloggedIn = (req, res, next) => {
-  if (!req.cookies["user_id"] && req.path !== '/register' && req.path !== '/login' && req.path !== '/u/:shortURL'){
+  if (!req.cookies["user_id"] && req.path !== '/register' && req.path !== '/login' && !req.path.includes('/u/')){
     let templateVars = {
       user: null,
       error: 'Please login or register to Tiny App to access this page!'
