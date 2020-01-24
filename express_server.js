@@ -7,6 +7,7 @@ const PORT = 8080; // default port 8080
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const uuidv4 = require('uuid/v4');
+const bcrypt = require('bcrypt');
 
 // MIDDLEWARE
 //===================
@@ -47,12 +48,14 @@ const users = {
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
+    password: "purple-monkey-dinosaur",
+    hashedPassword: bcrypt.hashSync("purple-monkey-dinosaur", 10)
   },
  "user2RandomID": {
     id: "user2RandomID", 
     email: "user2@example.com", 
-    password: "dishwasher-funk"
+    password: "dishwasher-funk",
+    hashedPassword: bcrypt.hashSync("dishwasher-funk", 10)
   }
 };
 
@@ -88,8 +91,6 @@ const existingUser = (email) => {
 
 
 
-
-
 // USER AUTH Routes
 // =======================
 
@@ -111,7 +112,7 @@ app.post('/login', (req, res) => {
 
   //If a user with that e-mail address is located, compare the password given in the form with
   //the existing user's password. If it does not match, return a response with a 403 status code.
-  if (!foundUser || (foundUser && password !== foundUser.password)) {
+  if (!foundUser || (foundUser && !bcrypt.compareSync(password, foundUser.hashedPassword))) {
     let templateVars = {
       user: null,
       error: "Your email or password was incorrect, please try again!"
@@ -147,6 +148,7 @@ app.get('/register', (req, res) => {
 app.post('/register', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
   const userId = generateRandomString();
   const foundUser = existingUser(email);
 
@@ -172,7 +174,8 @@ app.post('/register', (req, res) => {
     let newUser = {
       id: userId,
       email: email,
-      password: password
+      password: password,
+      hashedPassword: hashedPassword
     };
   // add to global object
   users[userId] = newUser;
