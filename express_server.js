@@ -216,7 +216,7 @@ app.get('/urls', (req, res) => {
 // Redirect to url/shortURL through newly generated ID
 app.post('/urls', (req, res) => {
   const randomizedURL = generateRandomString();
-  urlDatabase[randomizedURL].longURL = req.body.longURL;
+  urlDatabase[randomizedURL] = {longURL: req.body.longURL};
   res.redirect(`/urls/${randomizedURL}`);
 });
 
