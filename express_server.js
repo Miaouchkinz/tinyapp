@@ -5,7 +5,7 @@ const express = require('express');
 const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session')
 const uuidv4 = require('uuid/v4');
 const bcrypt = require('bcrypt');
 
@@ -14,10 +14,14 @@ const bcrypt = require('bcrypt');
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['biscuit', 'chatton', 'dragon', 'power'],
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}))
 
 const isUserloggedIn = (req, res, next) => {
-  if (!req.cookies["user_id"] && req.path !== '/register' && req.path !== '/login' && !req.path.includes('/u/')){
+  if (!req.session.user_id && req.path !== '/register' && req.path !== '/login' && !req.path.includes('/u/')){
     let templateVars = {
       user: null,
       error: 'Please login or register to Tiny App to access this page!'
@@ -96,7 +100,7 @@ const existingUser = (email) => {
 
 app.get('/login', (req, res) => {
   let templateVars = {
-    user: users[req.cookies["user_id"]],
+    user: users[req.session.user_id],
     error: false
   };
   res.render('login', templateVars);
@@ -122,23 +126,21 @@ app.post('/login', (req, res) => {
   } else {
   // If both checks pass, set the user_id cookie with the matching user's random ID, then redirect
   // to /urls.
-  res
-    .cookie('user_id', foundUser.id)
-    .redirect('/urls');
+  req.session.user_id = foundUser.id;
+  res.redirect('/urls');
   }
 });
 
 // Logout : clear userID cookie and redirect to /urls page
 app.post('/logout', (req, res) => {
-  res
-    .clearCookie('user_id')
-    .redirect('/login');
+  req.session = null;
+  res.redirect('/login');
 });
 
 // Render Register Page
 app.get('/register', (req, res) => {
   let templateVars = {
-    user: users[req.cookies["user_id"]],
+    user: users[req.session.user_id],
     error: false
   };
   res.render('registration', templateVars);
@@ -180,7 +182,7 @@ app.post('/register', (req, res) => {
   // add to global object
   users[userId] = newUser;
   // Once added, set user_id cookie containing the new random ID
-  res.cookie('user_id', userId);
+  req.session.user_id = userId;
   //redirect to urls page
   res.redirect('/urls');
   }
@@ -202,7 +204,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 // Create a new entry
 app.get('/urls/new', (req, res) => {
   let templateVars = {
-    user: users[req.cookies["user_id"]],
+    user: users[req.session.user_id],
   };
     res.render('urls_new', templateVars);
 });
@@ -210,8 +212,8 @@ app.get('/urls/new', (req, res) => {
 // Index page showing all your added URL entries
 app.get('/urls', (req, res) => {
   let templateVars = {
-    urls: urlsForUser(urlDatabase, (req.cookies["user_id"])),
-    user: users[req.cookies["user_id"]]
+    urls: urlsForUser(urlDatabase, (req.session.user_id)),
+    user: users[req.session.user_id]
   };
   res.render('urls_index', templateVars);
 });
@@ -221,7 +223,7 @@ app.post('/urls', (req, res) => {
   const randomizedURL = generateRandomString();
   urlDatabase[randomizedURL] = { 
     longURL: req.body.longURL,
-    userID: req.cookies["user_id"]
+    userID: req.session.user_id
   };
   res.redirect(`/urls/${randomizedURL}`);
 });
@@ -229,10 +231,10 @@ app.post('/urls', (req, res) => {
 // Page for new entry
 app.get('/urls/:shortURL', (req, res) => {
   let templateVars = {
-    urls: urlsForUser(urlDatabase, (req.cookies["user_id"])),
+    urls: urlsForUser(urlDatabase, (req.session.user_id)),
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL,
-    user: users[req.cookies["user_id"]]
+    user: users[req.session.user_id]
   }
   if (!templateVars.urls[templateVars.shortURL]) {
     let templateVars = {
