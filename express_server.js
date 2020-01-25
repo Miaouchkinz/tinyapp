@@ -10,6 +10,7 @@ const uuidv4 = require('uuid/v4');
 const bcrypt = require('bcrypt');
 const { urlsForUser, existingUser } = require('./helper');
 
+//===================
 // MIDDLEWARE
 //===================
 
@@ -21,7 +22,7 @@ app.use(cookieSession({
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
 
-// Middleware to check if someone is logged in. If not, it should redirect them to the login page.
+// Middleware function to check if someone is logged in. If not, it should redirect them to the login page.
 // Can still access /register, /login, and the u/:shortURL which leads to the respective longURL if not logged in.
 const isUserloggedIn = (req, res, next) => {
   if (!req.session.user_id && req.path !== '/register' && req.path !== '/login' && !req.path.includes('/u/')) {
@@ -37,15 +38,18 @@ const isUserloggedIn = (req, res, next) => {
 
 app.use(isUserloggedIn);
 
+
+// ===================
 // GLOBAL FUNCTIONS
-// ======================
+// ===================
 
 const generateRandomString = () => {
   return uuidv4().slice(0,6);
 };
 
+//===================
 // GLOBAL VARIABLES
-// ================
+// ==================
 
 const urlDatabase = {
   "b2xVn2": {
@@ -74,8 +78,9 @@ const users = {
 };
 
 
+// ==================
 // USER AUTH Routes
-// =======================
+// ==================
 
 // Render Login Page
 app.get('/login', (req, res) => {
@@ -167,9 +172,9 @@ app.post('/register', (req, res) => {
 
 
 
-
+// ========================
 // REQUEST routes for URLS
-// ============================
+// ========================
 
 // Render create a new entry page.
 app.get('/urls/new', (req, res) => {
@@ -177,21 +182,6 @@ app.get('/urls/new', (req, res) => {
     user: users[req.session.user_id],
   };
   res.render('urls_new', templateVars);
-});
-
-// Index page showing all your added URL entries
-app.get('/urls', (req, res) => {
-  let templateVars = {
-    urls: urlsForUser(urlDatabase, (req.session.user_id)),
-    user: users[req.session.user_id]
-  };
-  res.render('urls_index', templateVars);
-});
-
-// Redirect to longURL by clicking on the given shortURL
-app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL].longURL;
-  res.redirect(`${longURL}`);
 });
 
 // Page for specific shortURL, where you can edit the URL.
@@ -212,6 +202,21 @@ app.get('/urls/:shortURL', (req, res) => {
   } else {
     res.render('urls_show', templateVars);
   }
+});
+
+// Redirect to longURL by clicking on the given shortURL
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL].longURL;
+  res.redirect(`${longURL}`);
+});
+
+// Index page showing all your added URL entries
+app.get('/urls', (req, res) => {
+  let templateVars = {
+    urls: urlsForUser(urlDatabase, (req.session.user_id)),
+    user: users[req.session.user_id]
+  };
+  res.render('urls_index', templateVars);
 });
 
 // Ensure user sees something when they go to the root route.
